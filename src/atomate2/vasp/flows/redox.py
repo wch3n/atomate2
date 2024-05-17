@@ -65,6 +65,11 @@ REDOX_PRESET['OER'] = {0:{"reactant": "H2O", "ads": "OH",  "gas": "H", "e": 1},
         2:{"reactant": "H2O", "ads": "OOH", "gas": "H", "e": 1},
         3:{"reactant": None,  "ads": None,  "gas": ("O2", "H"), "e": 1}}
 
+REDOX_PRESET['OER_bi'] = {0:{"reactant": "H2O", "ads": "OH",  "gas": "H", "e": 1, "ads_site":'a'}, 
+        1:{"reactant": None,  "ads": "O",   "gas": "H", "e": 1, "ads_site": 'a'},
+        2:{"reactant": "H2O", "ads": "H", "gas": "O2", "e": 1, "ads_site":'b'},
+        3:{"reactant": None,  "ads": None,  "gas": "H", "e": 1}}
+
 REDOX_PRESET['CO2RR_1'] = {0:{"reactant": ("CO2","H"), "ads": "COOH", "gas":None, "e": 1}, 
         }
 REDOX_PRESET['CO2RR_2'] = {0:{"reactant": ("CO2","H"), "ads": "HCOO", "gas":None, "e": 1}, 
@@ -163,6 +168,7 @@ class RedoxPotentialMaker(Maker):
         thermodynamic_corrections: dict | None = None,
         substrate_supercell_dir: str | Path | None = None,
         anchor_site: int | list[int] | None = 0,
+        anchor_sites: dict | None = None,
         height: float = 1.8,
         theta: float | None = None,
         offset: list[float] | None = None,
@@ -217,6 +223,8 @@ class RedoxPotentialMaker(Maker):
         for _stage in redox.keys():
             ads = redox[_stage]['ads']
             if ads is not None:
+                if 'ads_site' in redox[_stage]:
+                    anchor_site = anchor_sites[redox[_stage]['ads_site']]
                 adsorb_job = adsorb_molecule(
                     molecule_name=ads,
                     substrate=sc_job.output['sc_struct'],
