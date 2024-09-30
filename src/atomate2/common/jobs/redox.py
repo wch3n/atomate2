@@ -24,7 +24,8 @@ logger = logging.getLogger(__name__)
 
 MOLECULES = {'OH': Molecule(['O', 'H'], [(0,0,0),(0,0,1)]),
              'O': Molecule(['O'], [(0,0,0)]),
-             'OOH': Molecule(['O','O','H'], [(-0.02,-0.02,0),(0.5,0.2,1.0),(-0.4,0.8,1.5)]),
+             #'OOH': Molecule(['O','O','H'], [(-0.02,-0.02,0),(0.5,0.2,1.0),(-0.4,0.8,1.5)]),
+             'OOH': Molecule(['O','O','H'], [(-0.01,-0.01,0),(0.0,0.13,-0.01),(-0.1,0.17,0.01)]),
              'H2': Molecule(['H', 'H'], [(0,0,0),(0,0,0.74)]),
              'O2': Molecule(['O', 'O'], [(0,0,0),(0,0,1.16)]),
              'H2O': Molecule(['O','H','H'], [(0,0,0),(0.76,0.59,0),(-0.76,0.59,0)]),
@@ -41,7 +42,7 @@ def adsorb_molecule(
     molecule_name: str,
     substrate: Structure | None,
     anchor_site: int | list[int] | None,
-    height: float = 1.8,
+    height: float = 2.0,
     theta: float | None = None,
     offset: list[float] | None = None,
     offset_subs: dict | None = None,

@@ -169,7 +169,7 @@ class RedoxPotentialMaker(Maker):
         substrate_supercell_dir: str | Path | None = None,
         anchor_site: int | list[int] | None = 0,
         anchor_sites: dict | None = None,
-        height: float = 1.8,
+        height: float = 2.0,
         theta: float | None = None,
         offset: list[float] | None = None,
         offset_subs: dict | None = None,
