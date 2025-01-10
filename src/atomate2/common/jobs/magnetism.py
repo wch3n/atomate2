@@ -19,12 +19,6 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-__all__ = [
-    "enumerate_magnetic_orderings",
-    "run_ordering_calculations",
-    "postprocess_orderings",
-]
-
 
 @job(name="enumerate orderings")
 def enumerate_magnetic_orderings(
@@ -55,7 +49,7 @@ def enumerate_magnetic_orderings(
         Input structure
     default_magmoms : dict[str, float]
         Optional default mapping of magnetic elements to their initial magnetic moments
-        in µB. Generally these are chosen to be high-spin, since they can relax to a
+        in μB. Generally these are chosen to be high-spin, since they can relax to a
         low-spin configuration during a DFT electronic configuration. If None, will use
         the default values provided in pymatgen/analysis/magnetism/default_magmoms.yaml.
     strategies : Sequence[Literal["ferromagnetic", "antiferromagnetic", ...]]
@@ -85,7 +79,6 @@ def enumerate_magnetic_orderings(
         truncate_by_symmetry=truncate_by_symmetry,
         transformation_kwargs=transformation_kwargs,
     )
-
     return enumerator.ordered_structures, enumerator.ordered_structure_origins
 
 
@@ -117,7 +110,7 @@ def run_ordering_calculations(
     """
     jobs = []
     num_orderings = len(orderings[0])
-    for idx, (struct, origin) in enumerate(zip(*orderings)):
+    for idx, (struct, origin) in enumerate(zip(*orderings, strict=True)):
         name = f"{idx + 1}/{num_orderings} ({origin})"
 
         parent_structure = struct.copy()

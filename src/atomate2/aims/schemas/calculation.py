@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import json
 import os
 from collections.abc import Sequence
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional, Union
 
@@ -15,6 +16,7 @@ from pydantic import BaseModel, Field
 from pymatgen.core import Molecule, Structure
 from pymatgen.core.trajectory import Trajectory
 from pymatgen.electronic_structure.dos import Dos
+from pymatgen.io.aims.inputs import AimsGeometryIn
 from pymatgen.io.aims.outputs import AimsOutput
 from pymatgen.io.common import VolumetricData
 from typing_extensions import Self
@@ -95,7 +97,7 @@ class CalculationOutput(BaseModel):
         None, description="The final structure from the calculation"
     )
 
-    efermi: float = Field(
+    efermi: Optional[float] = Field(
         None, description="The Fermi level from the calculation in eV"
     )
 
@@ -151,16 +153,14 @@ class CalculationOutput(BaseModel):
         structure = output.final_structure
 
         electronic_output = {
-            "efermi": output.fermi_energy,
+            "efermi": getattr(output, "fermi_energy", None),
             "vbm": output.vbm,
             "cbm": output.cbm,
             "bandgap": output.band_gap,
             "direct_bandgap": output.direct_band_gap,
         }
 
-        forces = None
-        if output.forces is not None:
-            forces = output.forces
+        forces = getattr(output, "forces", None)
 
         stress = None
         if output.stress is not None:
@@ -187,6 +187,25 @@ class CalculationOutput(BaseModel):
         )
 
 
+class CalculationInput(BaseModel):
+    """The FHI-aims Calculation input doc.
+
+    Parameters
+    ----------
+    structure: Structure or Molecule
+        The input pymatgen Structure or Molecule of the system
+    parameters: dict[str, Any]
+        The parameters passed in the control.in file
+    """
+
+    structure: Union[Structure, Molecule] = Field(
+        None, description="The input structure object"
+    )
+    parameters: dict[str, Any] = Field(
+        {}, description="The input parameters for FHI-aims"
+    )
+
+
 class Calculation(BaseModel):
     """Full FHI-aims calculation inputs and outputs.
 
@@ -200,6 +219,8 @@ class Calculation(BaseModel):
         Whether FHI-aims completed the calculation successfully
     output: .CalculationOutput
         The FHI-aims calculation output
+    input: .CalculationInput
+        The FHI-aims calculation input
     completed_at: str
         Timestamp for when the calculation was completed
     output_file_paths: Dict[str, str]
@@ -216,6 +237,10 @@ class Calculation(BaseModel):
     has_aims_completed: TaskState = Field(
         None, description="Whether FHI-aims completed the calculation successfully"
     )
+    completed: bool = Field(
+        None, description="Whether FHI-aims completed the calculation successfully"
+    )
+    input: CalculationInput = Field(None, description="The FHI-aims calculation input")
     output: CalculationOutput = Field(
         None, description="The FHI-aims calculation output"
     )
@@ -238,7 +263,6 @@ class Calculation(BaseModel):
         parse_dos: str | bool = False,
         parse_bandstructure: str | bool = False,
         store_trajectory: bool = False,
-        # store_scf: bool = False,
         store_volumetric_data: Optional[Sequence[str]] = STORE_VOLUMETRIC_DATA,
     ) -> tuple[Self, dict[AimsObject, dict]]:
         """Create an FHI-aims calculation document from a directory and file paths.
@@ -291,9 +315,20 @@ class Calculation(BaseModel):
         aims_output_file = dir_name / aims_output_file
 
         volumetric_files = [] if volumetric_files is None else volumetric_files
+
+        aims_geo_in = AimsGeometryIn.from_file(dir_name / "geometry.in")
+        aims_parameters = {}
+        with open(str(dir_name / "parameters.json")) as pj:
+            aims_parameters = json.load(pj)
+
+        input_doc = CalculationInput(
+            structure=aims_geo_in.structure, parameters=aims_parameters
+        )
         aims_output = AimsOutput.from_outfile(aims_output_file)
 
-        completed_at = str(datetime.fromtimestamp(os.stat(aims_output_file).st_mtime))
+        completed_at = str(
+            datetime.fromtimestamp(os.stat(aims_output_file).st_mtime, tz=timezone.utc)
+        )
 
         output_file_paths = _get_output_file_paths(volumetric_files)
         aims_objects: dict[AimsObject, Any] = _get_volumetric_data(
@@ -323,8 +358,10 @@ class Calculation(BaseModel):
             task_name=task_name,
             aims_version=aims_output.aims_version,
             has_aims_completed=has_aims_completed,
+            completed=has_aims_completed == TaskState.SUCCESS,
             completed_at=completed_at,
             output=output_doc,
+            input=input_doc,
             output_file_paths={k.name.lower(): v for k, v in output_file_paths.items()},
         )
 

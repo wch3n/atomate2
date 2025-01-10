@@ -72,7 +72,7 @@ class MagneticOrderingsMaker(Maker, ABC):
         relaxations will be skipped (i.e., only static calculations are performed).
     default_magmoms : dict | None
         Optional default mapping of magnetic elements to their initial magnetic moments
-        in µB. Generally these are chosen to be high-spin, since they can relax to a
+        in μB. Generally these are chosen to be high-spin, since they can relax to a
         low-spin configuration during a DFT electronic configuration. If None, will use
         the default values provided in pymatgen/analysis/magnetism/default_magmoms.yaml.
     strategies : tuple[str]
@@ -119,15 +119,13 @@ class MagneticOrderingsMaker(Maker, ABC):
         """
         if self.relax_maker is None:
             warnings.warn(
-                (
-                    "No relax_maker provided, relaxations will be skipped. Please be"
-                    " sure that this is intended!"
-                ),
+                "No relax_maker provided, relaxations will be skipped. Please be"
+                " sure that this is intended!",
                 stacklevel=2,
             )
         else:
-            static_base_maker_name = self.static_maker.__class__.__mro__[1].__name__
-            relax_base_maker_name = self.relax_maker.__class__.__mro__[1].__name__
+            static_base_maker_name = type(self.static_maker).__mro__[1].__name__
+            relax_base_maker_name = type(self.relax_maker).__mro__[1].__name__
             if relax_base_maker_name != static_base_maker_name:
                 warnings.warn(
                     "The provided static and relax makers do not use the "
