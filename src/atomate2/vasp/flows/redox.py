@@ -9,9 +9,6 @@ from typing import TYPE_CHECKING
 
 from jobflow import Flow, Job, Maker, OutputReference
 
-from atomate2.utils.file_client import FileClient
-from atomate2.vasp.run import JobType
-from atomate2.common.files import get_zfile
 from atomate2.common.jobs.redox import (
     adsorb_molecule,
     dynmat_calculation,
@@ -79,8 +76,10 @@ REDOX_PRESET['HER'] = {0:{"reactant": "H", "ads": "H", "gas":None, "e": 1},
 
 INCAR_SETTINGS = {
     "ALGO": "Normal",
+    "GGA": "PE",
     "NELM": 30,
     "NSW": 50,
+    "ISIF": 0,
 }
 
 INCAR_SETTINGS_MOL = INCAR_SETTINGS.copy()
@@ -90,7 +89,7 @@ INCAR_SETTINGS_DYNMAT['IBRION'] = 7
 INCAR_SETTINGS_DYNMAT['NSW'] = None
 INCAR_SETTINGS_DYNMAT['LREAL'] = False
 
-KPOINT_SETTINGS = {"reciprocal_density": 200}
+KPOINT_SETTINGS = {"reciprocal_density": 250}
 KPOINT_SETTINGS_G = {"reciprocal_density": 1}
 
 SLAB_RELAX_GENERATOR = SlabRelaxSetGenerator(
@@ -178,6 +177,7 @@ class RedoxPotentialMaker(Maker):
         functional: str | None = None,
         vdw: str | None = None,
         dynmat: bool = False,
+        stages: list[int] | None = None,
     ) -> Flow:
 
         jobs = []
@@ -219,8 +219,13 @@ class RedoxPotentialMaker(Maker):
                 prv_calc_dir=substrate_supercell_dir
             )
         jobs.append(sc_job)
+
+        if stages is not None:
+            _stages = stages
+        else:
+            _stages = redox.keys()
        
-        for _stage in redox.keys():
+        for _stage in _stages:
             ads = redox[_stage]['ads']
             if ads is not None:
                 if 'ads_site' in redox[_stage]:

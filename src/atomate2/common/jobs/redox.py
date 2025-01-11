@@ -22,9 +22,8 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-MOLECULES = {'OH': Molecule(['O', 'H'], [(0,0,0),(0,0,1)]),
-             'O': Molecule(['O'], [(0,0,0)]),
-             #'OOH': Molecule(['O','O','H'], [(-0.02,-0.02,0),(0.5,0.2,1.0),(-0.4,0.8,1.5)]),
+MOLECULES = {'OH': Molecule(['O', 'H'], [(0,-0.05,0),(0.04,0.02,1)]),
+             'O': Molecule(['O'], [(0.02,0.01,0)]),
              'OOH': Molecule(['O','O','H'], [(-0.05,1.1,0),(-0.15,-0.3,-0.05),(-1.0,1.4,0.2)]),
              'H2': Molecule(['H', 'H'], [(0,0,0),(0,0,0.74)]),
              'O2': Molecule(['O', 'O'], [(0,0,0),(0,0,1.16)]),
@@ -74,7 +73,8 @@ def adsorb_molecule(
         substrate.append(atom.species, 
                          coords=anchor_coords + [0,0,height] + atom.coords,
                          coords_are_cartesian = True, 
-                         validate_proximity = True)
+                         validate_proximity = True,
+                         properties = {"magmom": 0.6})
     if fix_below:
         selective_dynamics = []
         for i in substrate:
