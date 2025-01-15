@@ -19,29 +19,10 @@ class SlabRelaxSetGenerator(VaspInputGenerator):
     """
 
     user_kpoints_settings: dict | Kpoints = field(default_factory=dict)
-
-    def get_incar_updates(
-        self,
-        structure: Structure,
-        prev_incar: dict = None,
-        bandgap: float = None,
-        vasprun: Vasprun = None,
-        outcar: Outcar = None,
-    ) -> dict:
+    
+    @property
+    def incar_updates(self) -> dict:
         """Get updates to the INCAR for a relaxation job.
-
-        Parameters
-        ----------
-        structure
-            A structure.
-        prev_incar
-            An incar from a previous calculation.
-        bandgap
-            The band gap.
-        vasprun
-            A vasprun from a previous calculation.
-        outcar
-            An outcar from a previous calculation.
 
         Returns
         -------
@@ -77,29 +58,10 @@ class SlabStaticSetGenerator(VaspInputGenerator):
     """
 
     user_kpoints_settings: dict | Kpoints = field(default_factory=dict)
-
-    def get_incar_updates(
-        self,
-        structure: Structure,
-        prev_incar: dict = None,
-        bandgap: float = None,
-        vasprun: Vasprun = None,
-        outcar: Outcar = None,
-    ) -> dict:
+    
+    @property
+    def incar_updates(self) -> dict: 
         """Get updates to the INCAR for a relaxation job.
-
-        Parameters
-        ----------
-        structure
-            A structure.
-        prev_incar
-            An incar from a previous calculation.
-        vasprun
-            A vasprun from a previous calculation.
-        bandgap
-            The band gap.
-        outcar
-            An outcar from a previous calculation.
 
         Returns
         -------
