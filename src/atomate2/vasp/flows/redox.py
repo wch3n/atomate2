@@ -11,6 +11,7 @@ from jobflow import Flow, Job, Maker, OutputReference
 
 from atomate2.common.jobs.redox import (
     adsorb_molecule,
+    desorb_atoms,
     dynmat_calculation,
     molecule_calculation,
     substrate_supercell_calculation,
@@ -67,10 +68,23 @@ REDOX_PRESET['OER_bi'] = {0:{"reactant": "H2O", "ads": "OH",  "gas": "H", "e": 1
         2:{"reactant": "H2O", "ads": "H", "gas": "O2", "e": 1, "ads_site":'b'},
         3:{"reactant": None,  "ads": None,  "gas": "H", "e": 1}}
 
-REDOX_PRESET['CO2RR_1'] = {0:{"reactant": ("CO2","H"), "ads": "COOH", "gas":None, "e": 1}, 
-        }
-REDOX_PRESET['CO2RR_2'] = {0:{"reactant": ("CO2","H"), "ads": "HCOO", "gas":None, "e": 1}, 
-        }
+REDOX_PRESET['CO2RR'] = {
+        "COOH":{"reactant": ("CO2","H"), "ads": "COOH", "gas":None, "e": 1}, 
+        "COOH_h":{"reactant": ("CO2","H"), "ads": "COOH_h", "gas":None, "e": 1}, 
+        "HCOO":{"reactant": ("CO2","H"), "ads": "HCOO", "gas":None, "e": 1}, 
+        "CO2":{"reactant": None, "ads": "CO2", "gas": None, "e": 0}, 
+        "CO":{"reactant": "H", "ads": "CO", "gas": 'H2O', "e": 0}, 
+        "CHO":{"reactant":"H", "ads": "CHO", "gas": None, "e": 1},
+        "CH2O":{"reactant":'H', "ads": "CH2O", "gas": None, "e": 1},
+        "CH3O":{"reactant":'H', "ads": "CH3O", "gas": None, "e": 1},
+        "CH3OH":{"reactant":'H', "ads": "CH3OH", "gas": None, "e": 1},
+        "CH3OH_g":{"reactant":None, "ads": None, "gas": "CH3OH", "e": 0},
+        "CO_g":{"reactant":None, "ads": None, "gas": "CO", "e": 0},
+        "CH4_g":{"reactant":None, "ads": None, "gas": "CH4", "e": 0},
+        "H2O_g":{"reactant":None, "ads": None, "gas": "H2O", "e": 0},
+        "PROTONATION": {"reactant": "H", "ads": "H", "gas":None, "e": 1},
+        "NULL": {"reactant": None, "ads": None, "gas":None, "e": 0}}
+
 REDOX_PRESET['HER'] = {0:{"reactant": "H", "ads": "H", "gas":None, "e": 1}, 
         }
 
@@ -178,9 +192,11 @@ class RedoxPotentialMaker(Maker):
         vdw: str | None = None,
         dynmat: bool = False,
         stages: list[int] | None = None,
+        desorb_sites: list[int] | None = None,
     ) -> Flow:
 
         jobs = []
+
         redox = REDOX_PRESET[redox_type]
 
         reactants = flatten_list([k for k in [j for j in [redox[i]['reactant'] 
@@ -219,6 +235,21 @@ class RedoxPotentialMaker(Maker):
                 prv_calc_dir=substrate_supercell_dir
             )
         jobs.append(sc_job)
+
+        # remove sites if instructed
+        if isinstance(desorb_sites, list):
+            desorb_job = desorb_atoms(
+                indices = desorb_sites,
+                substrate = sc_job.output['sc_struct']
+            )
+            jobs.append(desorb_job)
+        
+            des_sc_job = adsorbate_supercell_calculation(
+                adsorbate_structure=desorb_job.output,
+                relax_maker=self.adsorbate_relax_maker,
+            )
+            jobs.append(des_sc_job)
+
 
         if stages is not None:
             _stages = stages

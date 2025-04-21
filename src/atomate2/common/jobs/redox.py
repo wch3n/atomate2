@@ -30,7 +30,14 @@ MOLECULES = {'OH': Molecule(['O', 'H'], [(0,-0.05,0),(0.04,0.02,1)]),
              'H2O': Molecule(['O','H','H'], [(0,0,0),(0.76,0.59,0),(-0.76,0.59,0)]),
              'CO2': Molecule(['C','O','O'], [(0,0,0),(-1.2,0,0),(1.2,0,0)]),
              'COOH': Molecule(['C','O','O','H'], [(0,0,0),(1.1,0.0,0.5),(-1.2,0.0,0.5),(-1.2,0.0,1.5)]),
+             'COOH_h': Molecule(['C','O','O','H'], [(0,0,0),(1.2,0.0,0.0),(-0.6,1.0,0.0),(-0.6,2.0,0.0)]),
              'HCOO': Molecule(['O','C','O','H'], [(0,0,0),(1.2,0.1,0.8),(2.4,0.1,0.0),(1.2,0.1,1.8)]),
+             'CO': Molecule(['C', 'O'], [(0,0,0.0),(0,0,1.2)]),
+             'CH4': Molecule(['C','H','H','H','H'], [(0,0,0),(0.63,0.63,0.63),(-0.63,-0.63,0.63),(-0.63,0.63,-0.63),(0.63,-0.63,-0.63)]),
+             'CHO': Molecule(['C', 'O', 'H'], [(0,0,0.0),(0,0,1.2),(0.9,0,-0.1)]),
+             'CH2O': Molecule(['C', 'O', 'H', 'H'], [(0,0,0.0),(0,0,1.2),(0.9,0,-0.1),(-0.9,0,-0.1)]),
+             'CH3O': Molecule(['C', 'O', 'H', 'H', 'H'], [(0,0,0.0),(0,0,1.4),(1.0,0,-0.1),(-0.5,0.9,-0.1),(-0.5,-0.9,-0.1)]),
+             'CH3OH': Molecule(['C', 'O', 'H', 'H', 'H', 'H'], [(0,0,0.0),(0,0,1.4),(1.0,0,-0.1),(-0.5,0.9,-0.1),(-0.5,-0.9,-0.1),(0.9,0,1.6)]),
              'H': Molecule(['H'],[(0,0,0)]),
 }
 
@@ -84,6 +91,16 @@ def adsorb_molecule(
                 selective_dynamics.append([True, True, True])
         substrate.add_site_property("selective_dynamics", selective_dynamics)
         
+    return substrate
+
+@job
+def desorb_atoms(
+    indices: list[int],
+    substrate: Structure | None,
+) -> Structure:
+        
+    substrate.remove_sites(indices)
+
     return substrate
 
 @job
